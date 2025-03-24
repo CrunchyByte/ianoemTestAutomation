@@ -2,26 +2,45 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'
+        maven 'Maven3'  // Ensure Maven is installed in Jenkins
+        jdk 'JDK17'     // Ensure Java is installed (if needed)
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/CrunchyByte/ianoemTestAutomation.git'
+                git 'https://github.com/your-username/your-selenium-repo.git'
             }
         }
 
-        stage('Run Tests') {
+        stage('Run TestNG Tests') {
             steps {
                 sh 'mvn clean test'
             }
         }
 
-        stage('Archive Results') {
+        stage('Archive TestNG Results') {
             steps {
-                junit '**/target/surefire-reports/*.xml'
+                publishHTML(target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'test-output',
+                    reportFiles: 'index.html',
+                    reportName: 'TestNG Report'
+                ])
             }
+        }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml' // Stores TestNG results
+        }
+        failure {
+            mail to: 'CrunchyByte@protonmail.com',
+                subject: 'Jenkins Build Failed',
+                body: 'Check the Jenkins console output for details.'
         }
     }
 }
